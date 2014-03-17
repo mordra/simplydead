@@ -3,9 +3,9 @@
  */
 /// <reference path='../lib/definitions.d.ts'/>
 
-var game = new Phaser.Game(800, 600, Phaser.AUTO, '', {preload: preload, create: create, update: update});
-var keyboard = game.input.keyboard.createCursorKeys();
-
+var game = new Phaser.Game(800, 600, Phaser.CANVAS, 'screen', {preload: preload, create: create, update: update});
+var keyboard;
+var hero;
 
 function preload() {
     game.load.image('sky', 'assets/sky.png');
@@ -15,9 +15,10 @@ function preload() {
 }
 
 function create() {
-    game.add.sprite(0, 0, 'dude');
+    hero = game.add.sprite(0, 0, 'dude');
+    keyboard = game.input.keyboard.createCursorKeys();
 }
 
 function update() {
-
+    game.physics.arcade.moveToPointer(hero, 300, game.input.activePointer);
 }
