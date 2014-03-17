@@ -1,9 +1,11 @@
 /**
-* Created by mordrax on 17/03/14.
-*/
+ * Created by mordrax on 17/03/14.
+ */
 /// <reference path='../lib/definitions.d.ts'/>
-var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+
+var game = new Phaser.Game(800, 600, Phaser.AUTO, '', {preload: preload, create: create, update: update});
 var keyboard = game.input.keyboard.createCursorKeys();
+
 
 function preload() {
     game.load.image('sky', 'assets/sky.png');
@@ -17,5 +19,5 @@ function create() {
 }
 
 function update() {
+
 }
-//# sourceMappingURL=game.js.map
