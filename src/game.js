@@ -1,7 +1,3 @@
-/**
-* Created by mordrax on 17/03/14.
-*/
-/// <reference path='../lib/definitions.d.ts'/>
 var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 var keyboard;
 var player;
@@ -63,4 +59,3 @@ function fire() {
     bullet.reset(player.x, player.y);
     bullet.rotation = game.physics.arcade.moveToPointer(bullet, 1000, game.input.activePointer, 500) + Math.PI / 2;
 }
-//# sourceMappingURL=game.js.map
