@@ -1,66 +1,192 @@
+Player = function (game, bullets){
+    this.fireRate = 1000;
+    this.nextFire = 0;
+    this.health = 5;
+    this.alive = true;
+    this.bullets = bullets;
+    this.game = game;
+    this.sprite = game.add.sprite(32, 32, 'player');
+    this.sprite.anchor.setTo(0.5, 0.5);
+    this.game.physics.enable(this.sprite, Phaser.Physics.ARCADE);
+    this.sprite.body.collideWorldBounds = true;
+    this.sprite.body.bounce.setTo(0.1, 0.1);
+    this.sprite.body.immovable = true;
+}
+
+Player.prototype.fire = function(){
+    if (this.game.time.now > this.nextFire && this.bullets.countDead() > 0)
+    {
+        this.nextFire = this.game.time.now + this.fireRate;
+        var bullet = this.bullets.getFirstExists(false);
+        if (!bullet)
+            return;
+        bullet.reset(this.sprite.x, this.sprite.y);
+        // item, speed in ms
+        bullet.rotation = this.game.physics.arcade.moveToPointer(bullet, 1000) + Math.PI / 2;
+    }
+}
+
+Player.prototype.damage = function() {
+    this.health -= 1;
+    if (this.health <= 0)
+    {
+        this.alive = false;
+        this.sprite.kill();
+        // game over
+    }
+}
+
+
+
+Ogre = function (index, game, player, bullets) {
+    var x = game.world.randomX;
+    var y = game.world.randomY;
+
+    this.game = game;
+    this.health = 3;
+    this.player = player;
+    this.bullets = bullets;
+    this.fireRate = 1000;
+    this.nextFire = 0;
+    this.alive = true;
+    this.sprite = game.add.sprite(x, y, 'ogre');
+    this.sprite.anchor.set(0.5);
+    this.sprite.name = index.toString();
+    this.game.physics.enable(this.sprite, Phaser.Physics.ARCADE);
+    this.sprite.body.immovable = false;
+    this.sprite.body.collideWorldBounds = true;
+    this.sprite.body.bounce.setTo(0.1, 0.1);
+
+
+};
+
+
+Ogre.prototype.damage = function() {
+    this.health -= 1;
+    if (this.health <= 0)
+    {
+        this.alive = false;
+        this.sprite.kill();
+    }
+}
+
+
+Ogre.prototype.update = function() {
+    if (this.game.physics.arcade.distanceBetween(this.sprite, this.player.sprite) < 300)
+    {
+        if (this.game.time.now > this.nextFire && this.bullets.countDead() > 0)
+        {
+            this.nextFire = this.game.time.now + this.fireRate;
+            var bullet = this.bullets.getFirstDead();
+            bullet.reset(this.sprite.x, this.sprite.y);
+            bullet.rotation = this.game.physics.arcade.moveToObject(bullet, this.player.sprite, 500)+ Math.PI / 2;;
+        }
+    }
+};
+
+
+
+
 var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 var keyboard;
 var player;
-var bullets;
+var playerBullets;
+var enemy;
+var enemyBullets;
+
 
 function preload() {
     game.load.spritesheet('player', 'assets/player.png', 32, 32);
     game.load.spritesheet('bullet', 'assets/bullet.png', 32, 32);
-    game.load.spritesheet('');
+    game.load.spritesheet('ogre', 'assets/ogre.png', 64, 64 );
 }
 
 function create() {
-    //game.physics.setBoundsToWorld();
-    player = game.add.sprite(32, 32, 'player');
-    game.physics.enable(player, Phaser.Physics.ARCADE);
-    keyboard = game.input.keyboard.createCursorKeys();
-    player.body.collideWorldBounds = true;
-    player.body.bounce.setTo(1, 1);
-    player.body.immovable = true;
-    player.anchor.setTo(0.5, 0.5);
 
     //  Our bullet group
-    bullets = game.add.group();
-    bullets.enableBody = true;
-    bullets.physicsBodyType = Phaser.Physics.ARCADE;
-    bullets.createMultiple(300, 'bullet', 0, false);
-    bullets.setAll('anchor.x', 0.5);
-    bullets.setAll('anchor.y', Math.PI / 2);
-    bullets.setAll('outOfBoundsKill', true);
-    bullets.setAll('checkWorldBounds', true);
+    playerBullets = game.add.group();
+    playerBullets.enableBody = true;
+    playerBullets.physicsBodyType = Phaser.Physics.ARCADE;
+    playerBullets.createMultiple(10, 'bullet');
+    playerBullets.setAll('anchor.x', 0.5);
+    playerBullets.setAll('anchor.y', Math.PI / 2);
+    playerBullets.setAll('outOfBoundsKill', true);
+    playerBullets.setAll('checkWorldBounds', true);
+
+    player = new Player(game, playerBullets)
+    keyboard = game.input.keyboard.createCursorKeys();
 
 
-    // Set bullet velocity
+    //  The enemies bullet group
+    enemyBullets = game.add.group();
+    enemyBullets.enableBody = true;
+    enemyBullets.physicsBodyType = Phaser.Physics.ARCADE;
+    enemyBullets.createMultiple(1, 'bullet');
+    enemyBullets.setAll('anchor.x', 0.5);
+    enemyBullets.setAll('anchor.y', 0.5);
+    enemyBullets.setAll('outOfBoundsKill', true);
+    enemyBullets.setAll('checkWorldBounds', true);
+
+    //  Create some baddies to waste :)
+    enemy = [];
+    enemyMax = 1;
+    for (var i = 0; i < enemyMax; i++)
+    {
+        enemy.push(new Ogre(i, game, player, enemyBullets));
+    }
+
+
+
 }
 
 function update() {
-    player.body.velocity.setTo(0, 0);
-    if (keyboard.left.isDown) {
-        player.body.velocity.x = -200;
-    }
-    if (keyboard.right.isDown) {
-        player.body.velocity.x = 200;
-    }
-    if (keyboard.up.isDown) {
-        player.body.velocity.y = -200;
-    }
-    if (keyboard.down.isDown) {
-        player.body.velocity.y = 200;
+
+    game.physics.arcade.overlap(enemyBullets, player.sprite, bulletHit, null, this);
+
+    for (var i = 0; i < enemy.length; i++)
+    {
+        if (enemy[i].alive)
+        {
+            game.physics.arcade.collide(player.sprite, enemy[i].sprite);
+            game.physics.arcade.overlap(playerBullets, enemy[i].sprite, bulletHit, null, this);
+            enemy[i].update();
+        }
     }
 
-    player.rotation = game.physics.arcade.angleToPointer(player);
+
+    player.sprite.body.velocity.setTo(0, 0);
+    if (keyboard.left.isDown) {
+        player.sprite.body.velocity.x = -200;
+    }
+    if (keyboard.right.isDown) {
+        player.sprite.body.velocity.x = 200;
+    }
+    if (keyboard.up.isDown) {
+        player.sprite.body.velocity.y = -200;
+    }
+    if (keyboard.down.isDown) {
+        player.sprite.body.velocity.y = 200;
+    }
+
+    player.sprite.rotation = game.physics.arcade.angleToPointer(player.sprite);
 
     if (game.input.activePointer.isDown) {
         //  Boom!
-        fire();
+        player.fire();
     }
 }
 
-function fire() {
-    var bullet = bullets.getFirstExists(false);
-    if (!bullet)
-        return;
-    bullet.reset(player.x, player.y);
-    // item, speed in ms
-    bullet.rotation = game.physics.arcade.moveToPointer(bullet, 1000) + Math.PI / 2;
+function bulletHit (target, bullet) {
+    bullet.kill();
+
+    if (target === player.sprite){
+        player.damage();
+    }
+    else {
+        enemy[target.name].damage();
+    }
+
 }
+
+
+
