@@ -6,11 +6,12 @@ var bullets;
 function preload() {
     game.load.spritesheet('player', 'assets/player.png', 32, 32);
     game.load.spritesheet('bullet', 'assets/bullet.png', 32, 32);
+    game.load.spritesheet('');
 }
 
 function create() {
     //game.physics.setBoundsToWorld();
-    player = game.add.sprite(0, 0, 'player');
+    player = game.add.sprite(32, 32, 'player');
     game.physics.enable(player, Phaser.Physics.ARCADE);
     keyboard = game.input.keyboard.createCursorKeys();
     player.body.collideWorldBounds = true;
@@ -24,9 +25,12 @@ function create() {
     bullets.physicsBodyType = Phaser.Physics.ARCADE;
     bullets.createMultiple(300, 'bullet', 0, false);
     bullets.setAll('anchor.x', 0.5);
-    bullets.setAll('anchor.y', 0.5);
+    bullets.setAll('anchor.y', Math.PI / 2);
     bullets.setAll('outOfBoundsKill', true);
     bullets.setAll('checkWorldBounds', true);
+
+
+    // Set bullet velocity
 }
 
 function update() {
@@ -57,5 +61,6 @@ function fire() {
     if (!bullet)
         return;
     bullet.reset(player.x, player.y);
-    bullet.rotation = game.physics.arcade.moveToPointer(bullet, 1000, game.input.activePointer, 500) + Math.PI / 2;
+    // item, speed in ms
+    bullet.rotation = game.physics.arcade.moveToPointer(bullet, 1000) + Math.PI / 2;
 }
